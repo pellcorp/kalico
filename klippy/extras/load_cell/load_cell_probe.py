@@ -1021,9 +1021,27 @@ class LoadCellPrinterProbe:
         )
         if register_as_probe:
             self._printer.add_object("probe", self._printer_probe)
+        self._register_macros()
 
     def get_printer_probe(self) -> PrinterProbe:
         return self._printer_probe
+
+    def _register_macros(self):
+        gcode_dispatch: GCodeDispatch = self._printer.lookup_object("gcode")
+        gcode_dispatch.register_command(
+            "LOAD_CELL_PROBE_CALIBRATE",
+            self.cmd_LOAD_CELL_PROBE_CALIBRATE,
+            desc=self.cmd_LOAD_CELL_PROBE_CALIBRATE_help,
+        )
+
+    cmd_LOAD_CELL_PROBE_CALIBRATE_help: str = "Run a calibration routine"
+
+    def cmd_LOAD_CELL_PROBE_CALIBRATE(self, gcmd: GCodeCommand):
+        calibration: str = gcmd.get("CALIBRATION")
+        if calibration == "TEST":
+            gcmd.respond_info(f"CALIBRATION is {calibration}")
+        else:
+            raise gcmd.error(f"Unknown CALIBRATION value '{calibration}'")
 
     def add_client(self, callback):
         self._tap_analysis_helper.add_client(callback)
