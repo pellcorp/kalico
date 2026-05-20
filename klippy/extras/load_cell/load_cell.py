@@ -20,6 +20,10 @@ def avg(data):
     return sum(data) / len(data)
 
 
+def has_flag(gcmd, name):
+    return gcmd.get(name, default="False").strip().lower() in {"1", "true"}
+
+
 # Helper for event driven webhooks and subscription based API clients
 class ApiClientHelper(object):
     def __init__(self, printer):
@@ -116,7 +120,51 @@ class LoadCellCommandHelper:
     cmd_CALIBRATE_LOAD_CELL_help = "Start interactive calibration tool"
 
     def cmd_LOAD_CELL_CALIBRATE(self, gcmd):
-        LoadCellGuidedCalibrationHelper(self.printer, self.load_cell)
+        # just tare or run the whole guided calibration experience?
+        if has_flag(gcmd, "TARE"):
+            self._calibration_tare(gcmd)
+        else:
+            LoadCellGuidedCalibrationHelper(self.printer, self.load_cell)
+
+    # set reference tare counts on a calibrated load cell
+    def _calibration_tare(self, gcmd):
+        # it is invalid to set the reference tare counts on an uncalibrated
+        # load cell. Prompt user to run full calibration
+        if not self.load_cell.is_calibrated():
+            raise gcmd.error(
+                "Load cell has not been calibrated. Run LOAD_CELL_CALIBRATE first."
+            )
+        tare_counts = self.load_cell.avg_counts()
+        tare_percent = self.load_cell.counts_to_percent(tare_counts)
+        tare_force = (
+            self.load_cell.invert * tare_counts / self.load_cell.counts_per_gram
+        )
+        gcmd.respond_info(
+            "New reference tare value: 0 = %.1fg / %.2f%% (%i)"
+            % (tare_force, tare_percent, tare_counts)
+        )
+        self._report_calibration_change(gcmd, tare_counts)
+        LoadCellGuidedCalibrationHelper.calibration_warning(
+            gcmd, self.load_cell, tare_counts
+        )
+        save = has_flag(gcmd, "SAVE")
+        self.load_cell.set_reference_tare_counts(tare_counts, save=save)
+        if save:
+            gcmd.respond_info(
+                "Load cell calibration settings:\n\n"
+                "reference_tare_counts: %i\n\n"
+                "The SAVE_CONFIG command will update the printer config file"
+                " with the above and restart the printer."
+                % (self.load_cell.reference_tare_counts,)
+            )
+
+    def _report_calibration_change(self, gcmd, tare_counts):
+        change = tare_counts - self.load_cell.reference_tare_counts
+        force = self.load_cell.invert * change / self.load_cell.counts_per_gram
+        gcmd.respond_info(
+            "Calibration changed by: %.1fg / %.2f%%"
+            % (force, self.load_cell.counts_to_percent(change))
+        )
 
     cmd_LOAD_CELL_READ_help = "Take a reading from the load cell"
 
@@ -198,6 +246,17 @@ class LoadCellGuidedCalibrationHelper:
             "Use the ABORT command to quit."
         )
 
+    # warn if the tare point reduces the sensor's usable range
+    @staticmethod
+    def calibration_warning(gcmd, load_cell, counts):
+        if load_cell.counts_to_percent(counts) <= 2.0:
+            return
+        gcmd.respond_info(
+            "WARNING: tare value is more than 2% away from 0!\n"
+            "The load cell's range will be impacted.\n"
+            "Check for external force on the load cell."
+        )
+
     def verify_no_active_calibration(
         self,
     ):
@@ -272,12 +331,7 @@ class LoadCellGuidedCalibrationHelper:
             "Load cell tare value: %.2f%% (%i)"
             % (self.tare_percent, self._tare_counts)
         )
-        if self.tare_percent > 2.0:
-            gcmd.respond_info(
-                "WARNING: tare value is more than 2% away from 0!\n"
-                "The load cell's range will be impacted.\n"
-                "Check for external force on the load cell."
-            )
+        self.calibration_warning(gcmd, self.load_cell, self._tare_counts)
         gcmd.respond_info(
             "Now apply a known force to the load cell and enter \
                          the force value with:\n CALIBRATE GRAMS=nnn"
@@ -530,6 +584,19 @@ class LoadCell:
                 self.invert * (tare_delta / self.counts_per_gram), 1
             )
         self.printer.send_event("load_cell:tare", self)
+
+    def set_reference_tare_counts(self, tare_counts, save=False):
+        if tare_counts is None:
+            raise self.printer.command_error("Missing tare counts")
+        self.reference_tare_counts = int(tare_counts)
+        self.tare(self.reference_tare_counts)
+        if save:
+            configfile = self.printer.lookup_object("configfile")
+            configfile.set(
+                self.config_name,
+                "reference_tare_counts",
+                "%i" % (self.reference_tare_counts,),
+            )
 
     def set_calibration(self, counts_per_gram, tare_counts):
         if (
