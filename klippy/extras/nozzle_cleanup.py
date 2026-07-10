@@ -3,6 +3,7 @@
 # Copyright (C) 2024  Gareth Farrington <gareth@waves.ky>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
+from __future__ import annotations
 
 from klippy import Printer
 from klippy.configfile import ConfigWrapper
