@@ -226,12 +226,15 @@ class ResonanceTestExecutor:
     def __init__(self, config):
         self.printer = config.get_printer()
         self.gcode = self.printer.lookup_object("gcode")
+        self.max_velocity_factor = config.getfloat(
+            "max_velocity_factor", 0.75, above=0.0
+        )
 
     def run_test(self, test_seq, axis, freq_end, accel_per_hz, gcmd):
         with suspend_limits(
             self.printer,
             freq_end * accel_per_hz + 10.0,
-            accel_per_hz * 0.25 + 1.0,
+            accel_per_hz * self.max_velocity_factor + 1.0,
             gcmd.get_int("INPUT_SHAPING", 0),
         ):
             self._run_test(test_seq, axis, gcmd)

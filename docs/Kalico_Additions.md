@@ -15,6 +15,7 @@
 - [`[virtual_sdcard] with_subdirs`](./Config_Reference.md#virtual_sdcard) enables scanning of subdirectories for .gcode files, for the menu and M20/M23 commands
 - [`[firmware_retraction] z_hop_height`](./Config_Reference.md#firmware_retraction) adds an automatic z hop when using firmware retraction
 - [`[constants]` and `${constants.value}`](./Config_Reference.md#configuration-references) allow re-using values in your configuration
+- [`[resonance_tester] max_velocity_factor`](./Config_Reference.md#resonance_tester) controls the temporary velocity limit used during resonance tests.
 
 ## Enhanced behavior
 
