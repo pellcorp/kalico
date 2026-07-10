@@ -231,7 +231,7 @@ class ResonanceTestExecutor:
         with suspend_limits(
             self.printer,
             freq_end * accel_per_hz + 10.0,
-            accel_per_hz * 0.25 + 1.0,
+            accel_per_hz * 0.75 + 1.0, # for Simple AF we can't afford 16mm/s velocity too many samples
             gcmd.get_int("INPUT_SHAPING", 0),
         ):
             self._run_test(test_seq, axis, gcmd)
