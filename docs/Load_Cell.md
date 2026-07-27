@@ -515,7 +515,7 @@ with two HX717 chips:
 ```ini
 [load_cell_probe]
 sensor_type: hx717s
-sdo_pins: PA4, PA6
+dout_pins: PA4, PA6
 sclk_pins: PA5, PA7
 sample_rate: 320
 counts_per_gram: 490

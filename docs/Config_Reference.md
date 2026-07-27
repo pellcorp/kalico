@@ -6122,14 +6122,14 @@ so chips do not need to be phase-aligned.
 ```
 [load_cell]
 sensor_type: hx711s
-sdo_pins:
+dout_pins:
 #   Comma-separated list of pins connected to the HX711 DOUT lines, one per
 #   chip. Between 1 and 4 pins must be specified. All pins must be on the same
 #   MCU. The first chip listed paces the sample stream. This parameter must be
 #   provided.
 sclk_pins:
 #   Comma-separated list of pins connected to the HX711 SCLK lines, one per
-#   chip. Must match the order and count of sdo_pins. This parameter must be
+#   chip. Must match the order and count of dout_pins. This parameter must be
 #   provided.
 #gain: A-128
 #   Valid values are: A-128, A-64, B-32. The default is A-128. Changing the
@@ -6147,13 +6147,13 @@ for wiring notes; the same chip-per-pin model applies.
 ```
 [load_cell]
 sensor_type: hx717s
-sdo_pins:
+dout_pins:
 #   Comma-separated list of pins connected to the HX717 DOUT lines, one per
 #   chip. Between 1 and 4 pins must be specified. All pins must be on the same
 #   MCU.
 sclk_pins:
 #   Comma-separated list of pins connected to the HX717 SCLK lines, one per
-#   chip. Must match the order and count of sdo_pins.
+#   chip. Must match the order and count of dout_pins.
 #gain: A-128
 #   Valid values are: A-128, B-64, A-64, B-8. The default is A-128.
 #sample_rate: 320
