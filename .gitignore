@@ -21,4 +21,5 @@ site/
 .venv/
 env/
 venv/
+outfw/
 mkdocs-env/
