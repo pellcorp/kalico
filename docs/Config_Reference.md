@@ -2365,6 +2365,11 @@ section of the measuring resonances guide for more information on
 #   high-frequency resonances less precise. The default value is 75
 #   (mm/sec).
 #   Set it to 60 as a good baseline when using the sweeping resonance tester.
+#max_velocity_factor: 0.75
+#   Multiplier applied to accel_per_hz when setting the temporary maximum
+#   velocity for a resonance test. Increasing this value can shorten tests and
+#   reduce the amount of accelerometer data buffered in memory, but may require
+#   faster toolhead motion. The default is 0.75.
 #hz_per_sec: 1
 #   Determines the speed of the test. When testing all frequencies in
 #   range [min_freq, max_freq], each second the frequency increases by
