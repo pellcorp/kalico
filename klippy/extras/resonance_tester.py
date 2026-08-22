@@ -227,7 +227,7 @@ class ResonanceTestExecutor:
         self.printer = config.get_printer()
         self.gcode = self.printer.lookup_object("gcode")
         self.max_velocity_factor = config.getfloat(
-            "max_velocity_factor", 0.75, above=0.0
+            "max_velocity_factor", 1.0, above=0.0
         )
 
     def run_test(self, test_seq, axis, freq_end, accel_per_hz, gcmd):
