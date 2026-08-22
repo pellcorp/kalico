@@ -18,5 +18,5 @@ if [ "$1" = "host" ]; then
 elif [ "$1" = "btteddy" ]; then
   mv out/klipper.uf2 outfw/btteddy.uf2
 else
-  echo "$1 not supported"
+  mv out/klipper.bin outfw/${1}.bin
 fi

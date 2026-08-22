@@ -9,6 +9,8 @@ rm -rf outfw/*
 
 ./_build.sh host || exit $?
 ./_build.sh btteddy || exit $?
+./_build.sh e3v3se || exit $?
 
-mv outfw/* fw/K1/
-
+mv outfw/klipper_host_mcu fw/K1/
+mv outfw/btteddy.uf2 fw/K1/
+mv outfw/*.bin fw/NEBULA/
