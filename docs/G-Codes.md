@@ -1234,6 +1234,34 @@ corresponding settings from the
 - `MIN_TAP_QUALITY=<percent>`
 - `DECOMPRESSION_ANGLE=<angle>`
 
+When `[load_cell_probe]` is configured with `register_as_probe: False`, its
+probe commands use a `LOAD_CELL_` prefix so another probe can own the standard
+commands. The available commands are `LOAD_CELL_PROBE`,
+`LOAD_CELL_QUERY_PROBE`, `LOAD_CELL_PROBE_CALIBRATE`,
+`LOAD_CELL_PROBE_ACCURACY`, and `LOAD_CELL_Z_OFFSET_APPLY_PROBE`.
+
+### [load_cell_auto_z_offset]
+
+The following command is enabled when a
+[`[load_cell_auto_z_offset]`](Config_Reference.md#load_cell_auto_z_offset)
+section is present.
+
+#### LOAD_CELL_AUTO_Z_OFFSET
+
+`LOAD_CELL_AUTO_Z_OFFSET [X=<x>] [Y=<y>] [OFFSET_ADJUST=<mm>]
+[APPLY=<0|1>] [SAVE=<0|1>] [<probe_parameter>=<value>]`: Probe the same bed
+location with the primary probe and the load cell nozzle-contact probe, then
+calculate the primary probe's `z_offset`.
+
+- `X`, `Y`: Override the configured calibration position.
+- `OFFSET_ADJUST`: Override the configured fixed adjustment.
+- `APPLY=1`: Apply the correction to the current session using the G-Code Z
+  offset. This does not change the config file.
+- `SAVE=1`: Stage the calculated `z_offset` in the primary probe's config
+  section. Run `SAVE_CONFIG` afterward to persist it and restart.
+- Standard and load-cell-specific probe parameters, including `SAMPLES`, are
+  passed to both probe measurements.
+
 ### [manual_probe]
 
 The manual_probe module is automatically loaded.

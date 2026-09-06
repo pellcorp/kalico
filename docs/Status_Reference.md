@@ -382,6 +382,12 @@ The following information is available for `[load_cell_probe]`:
 the load cell. This re-set at the start of each probe.
 - 'last_trigger_time': timestamp of the last homing trigger
 
+## load_cell_auto_z_offset
+
+The following information is available for `[load_cell_auto_z_offset]`:
+- `last_z_offset`: The Z offset calculated by the last successful
+  `LOAD_CELL_AUTO_Z_OFFSET` command, or `None` if it has not run.
+
 ## manual_probe
 
 The following information is available in the

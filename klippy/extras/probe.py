@@ -293,7 +293,9 @@ class RetrySession:
 
 
 class PrinterProbe:
-    def __init__(self, config, mcu_probe):
+    def __init__(
+        self, config, mcu_probe, pin_chip_name="probe", command_prefix=""
+    ):
         self.printer = config.get_printer()
         self.name = config.get_name()
         self.mcu_probe = mcu_probe
@@ -311,6 +313,8 @@ class PrinterProbe:
         self.last_state = False
         self.last_z_result = 0.0
         self.was_last_result_good = False
+        self.pin_chip_name = pin_chip_name
+        self.command_prefix = command_prefix
         self.gcode_move = self.printer.load_object(config, "gcode_move")
         self.retry_session = RetrySession(config)
         # Infer Z position to move to during a probe
@@ -340,7 +344,9 @@ class PrinterProbe:
             "samples_tolerance_retries", 0, minval=0
         )
         # Register z_virtual_endstop pin
-        self.printer.lookup_object("pins").register_chip("probe", self)
+        self.printer.lookup_object("pins").register_chip(
+            self.pin_chip_name, self
+        )
         # Register homing event handlers
         self.printer.register_event_handler(
             "homing:homing_move_begin", self._handle_homing_move_begin
@@ -360,23 +366,27 @@ class PrinterProbe:
         # Register PROBE/QUERY_PROBE commands
         self.gcode = self.printer.lookup_object("gcode")
         self.gcode.register_command(
-            "PROBE", self.cmd_PROBE, desc=self.cmd_PROBE_help
+            self.command_prefix + "PROBE",
+            self.cmd_PROBE,
+            desc=self.cmd_PROBE_help,
         )
         self.gcode.register_command(
-            "QUERY_PROBE", self.cmd_QUERY_PROBE, desc=self.cmd_QUERY_PROBE_help
+            self.command_prefix + "QUERY_PROBE",
+            self.cmd_QUERY_PROBE,
+            desc=self.cmd_QUERY_PROBE_help,
         )
         self.gcode.register_command(
-            "PROBE_CALIBRATE",
+            self.command_prefix + "PROBE_CALIBRATE",
             self.cmd_PROBE_CALIBRATE,
             desc=self.cmd_PROBE_CALIBRATE_help,
         )
         self.gcode.register_command(
-            "PROBE_ACCURACY",
+            self.command_prefix + "PROBE_ACCURACY",
             self.cmd_PROBE_ACCURACY,
             desc=self.cmd_PROBE_ACCURACY_help,
         )
         self.gcode.register_command(
-            "Z_OFFSET_APPLY_PROBE",
+            self.command_prefix + "Z_OFFSET_APPLY_PROBE",
             self.cmd_Z_OFFSET_APPLY_PROBE,
             desc=self.cmd_Z_OFFSET_APPLY_PROBE_help,
         )
@@ -612,7 +622,9 @@ class PrinterProbe:
         print_time = toolhead.get_last_move_time()
         res = self.mcu_probe.query_endstop(print_time)
         self.last_state = res
-        gcmd.respond_info("probe: %s" % (["open", "TRIGGERED"][not not res],))
+        gcmd.respond_info(
+            "%s: %s" % (self.name, ["open", "TRIGGERED"][not not res])
+        )
 
     def get_status(self, eventtime):
         return {

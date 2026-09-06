@@ -6207,9 +6207,45 @@ sensor_type:
 #activate_gcode:
 #deactivate_gcode:
 #   See the "[probe]" section for a description of the above parameters.
+#register_as_probe: True
+#   When True, the load cell registers as the primary "probe" printer object,
+#   provides probe:z_virtual_endstop, and owns the standard probe commands.
+#   Set this to False to use another primary probe, such as a BLTouch. In that
+#   mode the load cell provides load_cell_probe:z_virtual_endstop and commands
+#   prefixed with LOAD_CELL_, such as LOAD_CELL_PROBE. The default is True.
 ```
 
 See [Tap Quality Components](Load_Cell.md#tap-quality-components) for more details on maximum for tap quality.
+
+### [load_cell_auto_z_offset]
+
+Automatically calibrates a primary probe's Z offset by comparing its trigger
+height with nozzle contact detected by a secondary load cell probe. The
+`[load_cell_probe]` must have `register_as_probe: False` when another probe is
+the primary probe.
+
+```
+[load_cell_auto_z_offset]
+center_xy_position:
+#   The X, Y bed coordinate where both measurements are taken. This parameter
+#   must be provided.
+#primary_probe: probe
+#   Name of the primary PrinterProbe object. The default is probe.
+#secondary_probe: load_cell_probe
+#   Name of the secondary load cell probe object. The default is
+#   load_cell_probe.
+#speed: 50
+#   Horizontal movement speed in mm/s.
+#z_hop: 5
+#   Relative Z clearance used before horizontal moves and after calibration.
+#z_hop_speed: 15
+#   Z clearance movement speed in mm/s.
+#offset_adjust: 0
+#   A fixed adjustment added to the calculated Z offset.
+#offset_min: 0
+#offset_max: 10
+#   Safety limits for the calculated Z offset.
+```
 
 ## Board specific hardware support
 
