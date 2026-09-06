@@ -6255,6 +6255,12 @@ sensor_type:
 #activate_gcode:
 #deactivate_gcode:
 #   See the "[probe]" section for a description of the above parameters.
+#register_as_probe: True
+#   When True, the load cell registers as the primary "probe" printer object,
+#   provides probe:z_virtual_endstop, and owns the standard probe commands.
+#   Set this to False to use another primary probe, such as a BLTouch. In that
+#   mode the load cell provides load_cell_probe:z_virtual_endstop and commands
+#   prefixed with LOAD_CELL_, such as LOAD_CELL_PROBE. The default is True.
 ```
 
 See [Tap Quality Components](Load_Cell.md#tap-quality-components) for more details on maximum for tap quality.
