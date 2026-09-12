@@ -5,7 +5,8 @@
 # This file may be distributed under the terms of the GNU GPLv3 license.
 from __future__ import annotations
 
-from typing import Callable, Protocol, TypedDict
+from collections.abc import Callable
+from typing import Protocol, TypedDict
 
 from klippy.mcu import MCU
 

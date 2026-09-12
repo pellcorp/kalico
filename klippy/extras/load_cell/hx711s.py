@@ -1,6 +1,7 @@
-# HX711/HX717 Support
+# Multi-Sensor HX711 and HX717 Support
 #
-# Copyright (C) 2024 Gareth Farrington <gareth@waves.ky>
+# Copyright (C) 2026 James Turton <james.turton@gmx.com>
+# Original HX711 driver Copyright (C) 2024 Gareth Farrington <gareth@waves.ky>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
 import logging
@@ -18,8 +19,8 @@ SAMPLE_ERROR_DESYNC = -0x80000000
 SAMPLE_ERROR_LONG_READ = 0x40000000
 
 
-# Implementation of HX711 and HX717
-class HX71xBase(LoadCellSensor):
+# Implementation of multiple HX711 and HX717 chips as one load cell
+class HX711SBase(LoadCellSensor):
     def __init__(
         self,
         config,
@@ -35,21 +36,31 @@ class HX71xBase(LoadCellSensor):
         self.consecutive_fails = 0
         self.sensor_type = sensor_type
         # Chip options
-        dout_pin_name = config.get("dout_pin")
-        sclk_pin_name = config.get("sclk_pin")
         ppins = printer.lookup_object("pins")
-        dout_ppin = ppins.lookup_pin(dout_pin_name)
-        sclk_ppin = ppins.lookup_pin(sclk_pin_name)
-        mcu: MCU = dout_ppin["chip"]
-        self.mcu: MCU = mcu
-        self.oid = mcu.create_oid()
-        if sclk_ppin["chip"] is not mcu:
+        dout_pin_names = [p.strip() for p in config.get("dout_pins").split(",")]
+        sclk_pin_names = [p.strip() for p in config.get("sclk_pins").split(",")]
+        if len(dout_pin_names) != len(sclk_pin_names):
             raise config.error(
-                "%s config error: All pins must be "
-                "connected to the same MCU" % (self.name,)
+                f"{sensor_type}: dout_pins and sclk_pins must have the same"
+                " number of entries"
             )
-        self.dout_pin = dout_ppin["pin"]
-        self.sclk_pin = sclk_ppin["pin"]
+        self.sensor_count = len(dout_pin_names)
+        if self.sensor_count < 1 or self.sensor_count > 4:
+            raise config.error(
+                f"{sensor_type}: must specify 1 to 4 sensor pin pairs"
+            )
+        # Resolve all pins and validate they share one MCU
+        dout_ppins = [ppins.lookup_pin(p) for p in dout_pin_names]
+        sclk_ppins = [ppins.lookup_pin(p) for p in sclk_pin_names]
+        mcu: MCU = dout_ppins[0]["chip"]
+        self.mcu: MCU = mcu
+        for ppin in dout_ppins[1:] + sclk_ppins:
+            if ppin["chip"] is not mcu:
+                raise config.error(
+                    f"{sensor_type}: all pins must be on the same MCU"
+                )
+        self.dout_pins = [p["pin"] for p in dout_ppins]
+        self.sclk_pins = [p["pin"] for p in sclk_ppins]
         # Samples per second choices
         self.sps = config.getchoice(
             "sample_rate", sample_rate_options, default=default_sample_rate
@@ -58,10 +69,13 @@ class HX71xBase(LoadCellSensor):
         self.gain_channel = int(
             config.getchoice("gain", gain_options, default=default_gain)
         )
+        self.oid = mcu.create_oid()
         ## Bulk Sensor Setup
         # Clock tracking
         chip_smooth = self.sps * UPDATE_INTERVAL * 2
-        self.ffreader = bulk_sensor.FixedFreqReader(mcu, chip_smooth, "<i")
+        unpack_format = "<" + ("i" * self.sensor_count)
+        self.ffreader = bulk_sensor.FixedFreqReader(mcu, chip_smooth,
+                                                    unpack_format)
         # Process messages in batches
         self.batch_bulk = bulk_sensor.BatchBulkHelper(
             self.printer,
@@ -71,27 +85,32 @@ class HX71xBase(LoadCellSensor):
             UPDATE_INTERVAL,
         )
         # Command Configuration
-        self.query_hx71x_cmd = None
+        self.query_hx711s_cmd = None
         self.attach_probe_cmd = None
         mcu.add_config_cmd(
-            "config_hx71x oid=%d gain_channel=%d dout_pin=%s sclk_pin=%s"
-            % (self.oid, self.gain_channel, self.dout_pin, self.sclk_pin)
+            f"config_hx711s oid={self.oid}"
+            f" sensor_count={self.sensor_count}"
+            f" gain_channel={self.gain_channel}"
         )
+        for i, (dout, sclk) in enumerate(zip(self.dout_pins, self.sclk_pins)):
+            mcu.add_config_cmd(
+                f"add_hx711s oid={self.oid} index={i}"
+                f" dout_pin={dout} sclk_pin={sclk}"
+            )
         mcu.add_config_cmd(
-            "query_hx71x oid=%d rest_ticks=0" % (self.oid,), on_restart=True
+            f"query_hx711s oid={self.oid} rest_ticks=0", on_restart=True
         )
-
         mcu.register_config_callback(self._build_config)
 
     def _build_config(self):
-        self.query_hx71x_cmd = self.mcu.lookup_command(
-            "query_hx71x oid=%c rest_ticks=%u"
+        self.query_hx711s_cmd = self.mcu.lookup_command(
+            "query_hx711s oid=%c rest_ticks=%u"
         )
         self.attach_probe_cmd = self.mcu.lookup_command(
-            "hx71x_attach_load_cell_probe oid=%c load_cell_probe_oid=%c"
+            "hx711s_attach_load_cell_probe oid=%c load_cell_probe_oid=%c"
         )
         self.ffreader.setup_query_command(
-            "query_hx71x_status oid=%c",
+            "query_hx711s_status oid=%c",
             oid=self.oid,
             cq=self.mcu.alloc_command_queue(),
         )
@@ -108,7 +127,7 @@ class HX71xBase(LoadCellSensor):
         return -0x800000, 0x7FFFFF
 
     def get_channel_count(self) -> int:
-        return 1
+        return self.sensor_count
 
     # add_client interface, direct pass through to bulk_sensor API
     def add_client(self, callback: BulkAdcDataCallback):
@@ -121,11 +140,23 @@ class HX71xBase(LoadCellSensor):
     def _convert_samples(self, samples):
         adc_factor = 1.0 / (1 << 23)
         count = 0
-        for ptime, val in samples:
-            if val == SAMPLE_ERROR_DESYNC or val == SAMPLE_ERROR_LONG_READ:
+        for sample in samples:
+            ptime = sample[0]
+            channel_counts = sample[1:]
+            val = channel_counts[0]
+            if val == SAMPLE_ERROR_DESYNC:
                 self.last_error_count += 1
-                break  # additional errors are duplicates
-            samples[count] = (round(ptime, 6), val, round(val * adc_factor, 9))
+                logging.error("%s: DESYNC at t=%.3f", self.name, ptime)
+                break  # errors latch in the MCU, the rest are duplicates
+            elif val == SAMPLE_ERROR_LONG_READ:
+                self.last_error_count += 1
+                logging.error("%s: READ_TOO_LONG at t=%.3f", self.name, ptime)
+                break  # errors latch in the MCU, the rest are duplicates
+            converted = [round(ptime, 6)]
+            for ch in channel_counts:
+                converted.append(ch)
+                converted.append(round(ch * adc_factor, 9))
+            samples[count] = tuple(converted)
             count += 1
         del samples[count:]
 
@@ -134,8 +165,10 @@ class HX71xBase(LoadCellSensor):
         self.consecutive_fails = 0
         self.last_error_count = 0
         # Start bulk reading
-        rest_ticks = self.mcu.seconds_to_clock(1.0 / (10.0 * self.sps))
-        self.query_hx71x_cmd.send([self.oid, rest_ticks])
+        rest_ticks = self.mcu.seconds_to_clock(
+            1.0 / (10.0 * self.get_samples_per_second())
+        )
+        self.query_hx711s_cmd.send([self.oid, rest_ticks])
         logging.info(
             "%s starting '%s' measurements", self.sensor_type, self.name
         )
@@ -147,7 +180,7 @@ class HX71xBase(LoadCellSensor):
         if self.printer.is_shutdown():
             return
         # Halt bulk reading
-        self.query_hx71x_cmd.send_wait_ack([self.oid, 0])
+        self.query_hx711s_cmd.send_wait_ack([self.oid, 0])
         self.ffreader.note_end()
         logging.info(
             "%s finished '%s' measurements", self.sensor_type, self.name
@@ -181,11 +214,11 @@ class HX71xBase(LoadCellSensor):
         }
 
 
-class HX711(HX71xBase):
+class HX711S(HX711SBase):
     def __init__(self, config):
-        super(HX711, self).__init__(
+        super(HX711S, self).__init__(
             config,
-            "hx711",
+            "hx711s",
             # HX711 sps options
             {80: 80, 10: 10},
             80,
@@ -195,11 +228,11 @@ class HX711(HX71xBase):
         )
 
 
-class HX717(HX71xBase):
+class HX717S(HX711SBase):
     def __init__(self, config):
-        super(HX717, self).__init__(
+        super(HX717S, self).__init__(
             config,
-            "hx717",
+            "hx717s",
             # HX717 sps options
             {320: 320, 80: 80, 20: 20, 10: 10},
             320,
@@ -209,4 +242,4 @@ class HX717(HX71xBase):
         )
 
 
-HX71X_SENSOR_TYPES = {"hx711": HX711, "hx717": HX717}
+HX711S_SENSOR_TYPES = {"hx711s": HX711S, "hx717s": HX717S}
