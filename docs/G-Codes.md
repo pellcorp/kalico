@@ -1234,6 +1234,12 @@ corresponding settings from the
 - `MIN_TAP_QUALITY=<percent>`
 - `DECOMPRESSION_ANGLE=<angle>`
 
+When `[load_cell_probe]` is configured with `register_as_probe: False`, its
+probe commands use a `LOAD_CELL_` prefix so another probe can own the standard
+commands. The available commands are `LOAD_CELL_PROBE`,
+`LOAD_CELL_QUERY_PROBE`, `LOAD_CELL_PROBE_CALIBRATE`,
+`LOAD_CELL_PROBE_ACCURACY`, and `LOAD_CELL_Z_OFFSET_APPLY_PROBE`.
+
 ### [manual_probe]
 
 The manual_probe module is automatically loaded.

@@ -187,6 +187,31 @@ z_offset: 0.0
 
 See the [configuration reference](Config_Reference.md#load_cell_probe) for all available options.
 
+### Using a Load Cell with a Separate Z Probe
+
+A load cell can be kept as a secondary nozzle-contact probe while a BLTouch or
+another probe handles Z homing, bed mesh, and the standard probe commands:
+
+```ini
+[bltouch]
+# sensor_pin, control_pin, and other BLTouch settings...
+z_offset: 2.0
+
+[load_cell_probe]
+# sensor and load cell probe settings...
+z_offset: 0
+register_as_probe: False
+```
+
+Keep `stepper_z:endstop_pin` set to `probe:z_virtual_endstop` so the primary
+probe remains the Z endstop. After homing all axes, move the nozzle over the
+load cell and run `LOAD_CELL_PROBE HOME=Z` to make nozzle contact the current
+Z=0 reference. The secondary load cell can also be exercised without changing
+the Z reference using `LOAD_CELL_PROBE` and `LOAD_CELL_PROBE_ACCURACY`. As with
+other nozzle-contact probing, configure `stepper_z:position_min` low enough for
+the nozzle to reach the bed if the primary probe's configured offset is
+inaccurate.
+
 ### Safety
 
 Load cells are direct nozzle contact probes. The system includes safety checks to prevent excessive force on the toolhead. Poorly chosen configuration values can defeat these protections.

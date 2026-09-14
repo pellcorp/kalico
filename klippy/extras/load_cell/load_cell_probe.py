@@ -1010,8 +1010,20 @@ class LoadCellPrinterProbe:
         wrapper = LoadCellEndstopWrapper(
             config, homing_move, self._tapping_move
         )
-        printer_probe = PrinterProbe(config, wrapper)
-        self._printer.add_object("probe", printer_probe)
+        register_as_probe = config.getboolean("register_as_probe", True)
+        pin_chip_name = "probe" if register_as_probe else "load_cell_probe"
+        command_prefix = "" if register_as_probe else "LOAD_CELL_"
+        self._printer_probe = PrinterProbe(
+            config,
+            wrapper,
+            pin_chip_name=pin_chip_name,
+            command_prefix=command_prefix,
+        )
+        if register_as_probe:
+            self._printer.add_object("probe", self._printer_probe)
+
+    def get_printer_probe(self) -> PrinterProbe:
+        return self._printer_probe
 
     def get_status(self, eventtime):
         return self._tapping_move.get_status(eventtime)
