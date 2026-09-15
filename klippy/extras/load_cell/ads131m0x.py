@@ -5,7 +5,6 @@
 # ADS131M0x Chip Documentation:
 # ADS131M02 - https://www.ti.com/lit/ds/symlink/ads131m02.pdf
 # ADS131M04 - https://www.ti.com/lit/ds/symlink/ads131m04.pdf
-
 import logging
 from math import floor
 from typing import Dict
