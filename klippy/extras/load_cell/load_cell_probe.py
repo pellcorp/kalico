@@ -19,11 +19,8 @@ from klippy.toolhead import ToolHead
 
 from . import sos_filter
 from .interfaces import LoadCellSensor
-from .load_cell import (
-    LoadCell,
-    LoadCellSampleCollector,
-    ZeroReference,
-)
+from .load_cell import LoadCellSampleCollector
+from .multi_load_cell import MultiLoadCell as LoadCell, ZeroReference
 from .tap_analysis import TapAnalysis, TapAnalysisHelper, TapClassifierModule
 from .tap_quality_classifier import TapQualityClassifier
 
