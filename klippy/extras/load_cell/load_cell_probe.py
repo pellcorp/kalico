@@ -1417,9 +1417,7 @@ class LoadCellPrinterProbe:
 
     def cmd_LOAD_CELL_PROBE_CALIBRATE(self, gcmd: GCodeCommand):
         calibration: str = gcmd.get("CALIBRATION")
-        if calibration == "DRIFT_FILTER":
-            self._drift_filter_calibration.calibrate(gcmd)
-        elif calibration == "PULLBACK_DISTANCE":
+        if calibration == "PULLBACK_DISTANCE":
             self._pullback_distance_calibration.calibrate(gcmd)
         elif calibration == "DECOMPRESSION_ANGLE" and isinstance(
             self._tap_classifier, TapQualityClassifier
@@ -1427,7 +1425,7 @@ class LoadCellPrinterProbe:
             self._tap_classifier.calibrate(gcmd)
         elif not calibration:
             gcmd.error(
-                "CALIBRATION must be one of DRIFT_FILTER, "
+                "CALIBRATION must be one of "
                 "PULLBACK_DISTANCE or DECOMPRESSION_ANGLE"
             )
         else:
