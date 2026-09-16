@@ -1280,6 +1280,8 @@ class PullbackDistanceCalibration:
         pass
 
     def calibrate(self, gcmd: GCodeCommand):
+        import numpy as np
+
         self._gcmd = gcmd
         gcmd.respond_info("Starting pullback_distance calibration...")
         bed_mesh: BedMesh = self._printer.lookup_object(
