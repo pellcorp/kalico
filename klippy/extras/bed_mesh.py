@@ -292,7 +292,6 @@ class BedMesh:
                     )
         self.last_position[:] = newpos
 
-    # sourced from OpenCentauri to support load cell probe calibrations
     def generate_points(
         self, gcmd: GCodeCommand, profile_name: str = "default"
     ):
@@ -1006,7 +1005,6 @@ class BedMeshCalibrate:
             adj_pts.append(self.zero_ref_pos)
         return adj_pts
 
-    # sourced from OpenCentauri to support load cell probe calibrations
     def generate_points(
         self, gcmd: GCodeCommand, profile_name: str = "default"
     ):

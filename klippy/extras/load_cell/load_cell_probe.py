@@ -19,8 +19,11 @@ from klippy.toolhead import ToolHead
 
 from . import sos_filter
 from .interfaces import LoadCellSensor
-from .load_cell import LoadCellSampleCollector
-from .multi_load_cell import MultiLoadCell as LoadCell, ZeroReference
+from .load_cell import (
+    LoadCell,
+    LoadCellSampleCollector,
+    ZeroReference,
+)
 from .tap_analysis import TapAnalysis, TapAnalysisHelper, TapClassifierModule
 from .tap_quality_classifier import TapQualityClassifier
 
@@ -1277,8 +1280,6 @@ class PullbackDistanceCalibration:
         pass
 
     def calibrate(self, gcmd: GCodeCommand):
-        import numpy as np
-
         self._gcmd = gcmd
         gcmd.respond_info("Starting pullback_distance calibration...")
         bed_mesh: BedMesh = self._printer.lookup_object(
