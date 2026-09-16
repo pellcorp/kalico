@@ -12,12 +12,13 @@ from klippy.printer import Printer, SubsystemComponentCollection
 
 # register sensors that implement LoadCellSensor
 def register_components(subsystem: SubsystemComponentCollection):
-    sensors = (
-        hx71x.HX71X_SENSOR_TYPES
-        | ads1220.ADS1220_SENSOR_TYPE
-        | ads131m0x.ADS131M0X_SENSOR_TYPES
-        | hx711s.HX711S_SENSOR_TYPES
-    )
+    # dict | dict needs py3.9+; this target runs py3.8, so use ** instead
+    sensors = {
+        **hx71x.HX71X_SENSOR_TYPES,
+        **ads1220.ADS1220_SENSOR_TYPE,
+        **ads131m0x.ADS131M0X_SENSOR_TYPES,
+        **hx711s.HX711S_SENSOR_TYPES,
+    }
     for name, sensor in sensors.items():
         subsystem.register_component("load_cell_probe_sensors", name, sensor)
     key = "load_cell_probe_tap_classifiers"
