@@ -1034,7 +1034,10 @@ class LoadCellPrinterProbe:
         wrapper = LoadCellEndstopWrapper(
             config, homing_move, self._tapping_move
         )
-        PrinterProbe(config, wrapper)
+        self._printer_probe = PrinterProbe(config, wrapper)
 
     def get_status(self, eventtime):
-        return self._tapping_move.get_status(eventtime)
+        # Expose this probe's result even when it is not the default probe.
+        status = self._tapping_move.get_status(eventtime)
+        status["last_z_result"] = self._printer_probe.last_z_result
+        return status
