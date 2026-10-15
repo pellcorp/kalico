@@ -636,6 +636,9 @@ class LoadCellPrimitives:
     # pauses for the last move to complete and then
     # sets the endstop tare value and range
     def tare(self, gcmd=None):
+        # do not permit taring if the load cell is not calibrated
+        if not self._load_cell.is_calibrated():
+            raise self._printer.command_error("Load Cell not calibrated")
         collector = self._start_collector()
         num_samples = self._config_helper.get_tare_samples(gcmd)
         # use collect_min collected samples are not wasted
