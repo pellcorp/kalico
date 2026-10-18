@@ -5,6 +5,7 @@
 # This file may be distributed under the terms of the GNU GPLv3 license.
 import bisect
 import math
+from typing import List
 
 from klippy import gcode, mcu
 
@@ -236,7 +237,7 @@ class EddyDistanceCollector(probe.ProbeDistanceCollector):
 
         return True
 
-    def finish(self, before_time: float) -> list[probe.ProbeDistanceResult]:
+    def finish(self, before_time: float) -> List[probe.ProbeDistanceResult]:
         self.stop_after = before_time
         now = self.endstop_wrapper._printer.get_reactor().monotonic()
         timeout = (
