@@ -1078,7 +1078,12 @@ class ProbePointsHelper:
         scan_height = self.horizontal_move_z
         self.lift_speed = probe.get_lift_speed(gcmd)
         max_speed, _ = toolhead.get_max_velocity()
-        probe_speed = gcmd.get_float("PROBE_SPEED", probe.speed, above=0.0)
+        default_probe_speed = getattr(probe, "speed", None)
+        if default_probe_speed is None:
+            default_probe_speed = probe.get_probe_params(gcmd)["probe_speed"]
+        probe_speed = gcmd.get_float(
+            "PROBE_SPEED", default_probe_speed, above=0.0
+        )
         scan_speed = gcmd.get_float(
             "SCAN_SPEED",
             min(self.speed, max_speed),
