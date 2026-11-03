@@ -191,7 +191,7 @@ class TemplateWrapperPython:
 
         if context is None:
             context = {}
-        exec_globals = dict(context | helpers)
+        exec_globals = {**context, **helpers}
         try:
             exec(self.func, exec_globals, {})
         except Exception as e:
