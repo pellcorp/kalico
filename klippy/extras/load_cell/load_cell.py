@@ -323,11 +323,6 @@ class LoadCellGuidedCalibrationHelper:
                 "WARNING: Load cell capacity is less than 1kg!\n"
                 "Check wiring and consider using a lower sensor gain."
             )
-        if cap_kg > 25.0:
-            gcmd.respond_info(
-                "WARNING: Load cell capacity is more than 25Kg!\n"
-                "Check wiring and consider using a higher sensor gain."
-            )
         gcmd.respond_info("Accept calibration with the ACCEPT command.")
 
 
