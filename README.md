@@ -4,10 +4,16 @@ This includes K1, K1C, K1 Max, K1SE as well as Ender 3 V3 KE, Ender 5 Max and Ne
 
 ## Building firmware
 
-The host, btteddy and Nebula Pad specific firmware for older ender 3s is done here via docker
+The host firmware via k1-klipper-fw-build docker:
 
 ```
-docker run -ti -v $PWD:$PWD pellcorp/k1-klipper-fw-build $PWD/build.sh
+docker run -ti -v $PWD:$PWD pellcorp/k1-klipper-fw-build $PWD/_build.sh host
+```
+
+The btteddy and Nebula Pad specific firmware for older ender 3s is done here via docker:
+
+```
+docker run -ti -v $PWD:$PWD pellcorp/klipper-fw-build $PWD/build.sh
 ```
 
 ## Building Chelper
