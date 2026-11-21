@@ -142,9 +142,14 @@ se_start_gen_steps(struct syncemitter *se, double gen_steps_time
     se->bg_gen_steps_time = gen_steps_time;
     se->bg_flush_clock = flush_clock;
     se->bg_clear_history_clock = clear_history_clock;
-    se->have_work = 1;
+    // Generate steps inline on the calling thread instead of the
+    // background thread (background step threads cause "Invalid sequence"
+    // shutdowns on Creality K1 MIPS hosts)
+    se->bg_result = se_generate_steps(se);
+    if (se->bg_result)
+        errorf("Error in syncemitter '%s' step generation", se->name);
+    se->have_work = 0;
     pthread_mutex_unlock(&se->lock);
-    pthread_cond_signal(&se->cond);
 }
 
 // Wait for background thread to complete last step generation request
